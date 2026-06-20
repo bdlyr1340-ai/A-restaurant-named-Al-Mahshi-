@@ -5,6 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة التحكم المطورة</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* تحسين مظهر أزرار رفع الملفات لتناسب الموبايل */
+        label {
+            display: block;
+            text-align: right;
+            font-weight: bold;
+            margin-top: 10px;
+            font-size: 10.5pt;
+            color: #555;
+        }
+        input[type="file"] {
+            background: #f8f9fa;
+            border: 1px dashed #ff4757;
+            padding: 10px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -15,17 +32,27 @@
     <main class="admin-main">
         <section class="admin-card">
             <h2>🏠 إعدادات المطعم والتواصل</h2>
-            <input type="text" id="setRestName" placeholder="اسم المطعم">
-            <input type="text" id="setRestLogo" placeholder="رابط صورة/شعار المطعم">
-            <input type="text" id="setWhatsApp" placeholder="رابط أو رقم الواتساب (مثال: 9647700000000)">
-            <input type="text" id="setInstagram" placeholder="رابط محادثة انستقرام المباشر">
+            <label>اسم المطعم:</label>
+            <input type="text" id="setRestName" placeholder="اكتب اسم المطعم">
+            
+            <label>اختر صورة/شعار المطعم من جهازك:</label>
+            <input type="file" id="setRestLogo" accept="image/*">
+            
+            <label>رقم الواتساب للتوصيل (مثال: 9647700000000):</label>
+            <input type="text" id="setWhatsApp" placeholder="رقم الواتساب بدون علامة +">
+            
+            <label>رابط انستقرام المباشر:</label>
+            <input type="text" id="setInstagram" placeholder="رابط المحادثة">
             <button id="saveConfigBtn" class="btn-primary">حفظ إعدادات المطعم</button>
         </section>
 
         <section class="admin-card">
             <h2>🔥 إضافة عرض أو إعلان جديد (الشريط المتحرك)</h2>
-            <input type="text" id="offerTitle" placeholder="عنوان العرض (مثال: خصم 25% على المشاوي)">
-            <input type="text" id="offerImage" placeholder="رابط صورة العرض المستطيلة">
+            <label>عنوان العرض (مثال: خصم 25%):</label>
+            <input type="text" id="offerTitle" placeholder="اكتب تفاصيل العرض">
+            
+            <label>اختر صورة العرض المستطيلة من جهازك:</label>
+            <input type="file" id="offerImage" accept="image/*">
             <button id="addOfferBtn" class="btn-secondary">إضافة العرض للشريط</button>
             
             <h3>العروض الحالية (اضغط للحذف):</h3>
@@ -34,9 +61,14 @@
 
         <section class="admin-card">
             <h2>🍔 إضافة وجبة جديدة للمنيو</h2>
-            <input type="text" id="itemName" placeholder="اسم الوجبة">
-            <input type="number" id="itemPrice" placeholder="السعر بالدينار العراقي">
-            <input type="text" id="itemImage" placeholder="رابط صورة الوجبة">
+            <label>اسم الوجبة:</label>
+            <input type="text" id="itemName" placeholder="مثال: برجر لحم دبل">
+            
+            <label>السعر بالدينار العراقي:</label>
+            <input type="number" id="itemPrice" placeholder="السعر">
+            
+            <label>اختر صورة الوجبة من جهازك:</label>
+            <input type="file" id="itemImage" accept="image/*">
             <button id="addItemBtn" class="btn-primary">إضافة الوجبة للمنيو</button>
             
             <h3>الوجبات الحالية في المنيو:</h3>
