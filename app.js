@@ -1,7 +1,7 @@
-// رابط الـ Firebase الخاص بك الموجه للجذر لتنظيم البيانات بشكل احترافي
+// رابط الـ Firebase الخاص بك
 const rootURL = "https://cd-store-menu-default-rtdb.firebaseio.com/";
 
-// التحقق من لوحة الإدارة وحمايتها بالباسورد الحالي
+// التحقق من لوحة الإدارة وحمايتها بالباسورد
 const isAdminPage = window.location.pathname.includes('admin.html');
 if (isAdminPage) {
     let pass = prompt("أدخل كلمة مرور المسؤول للدخول للوحة التحكم:");
@@ -11,38 +11,45 @@ if (isAdminPage) {
     }
 }
 
-// متغيرات عامة لحفظ بيانات التواصل الحالية أثناء تصفح الزبون
-let currentConfig = {
-    restaurantName: "مطعم المحشي",
-    restaurantLogo: "",
-    whatsapp: "",
-    instagram: ""
-};
+let currentConfig = { restaurantName: "مطعم المحشي", restaurantLogo: "", whatsapp: "", instagram: "" };
 let selectedItemForOrder = null;
 
-// --- دالة جلب كل البيانات من السيرفر وعرضها بديناميكية ---
+// دالة سحرية لتحويل ملف الصورة المرفوع من الجهاز إلى نص يعشق الفايربيز (Base64)
+function convertFileToBase64(fileInput) {
+    return new Promise((resolve) => {
+        if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+            resolve(""); // إذا لم يقم باختيار صورة يرجع نص فارغ
+            return;
+        }
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => resolve("");
+        reader.readAsDataURL(file);
+    });
+}
+
+// --- دالة جلب البيانات وعرضها ---
 function loadAllData() {
     fetch(rootURL + '.json')
         .then(response => response.json())
         .then(data => {
             if (!data) data = {};
 
-            // 1. جلب وتطبيق الإعدادات العامة (الاسم، الشعار، روابط التواصل)
+            // 1. تطبيق الإعدادات العامة
             if (data.config) {
                 currentConfig = data.config;
                 if (!isAdminPage) {
                     if(data.config.restaurantName) document.getElementById('restName').innerText = data.config.restaurantName;
                     if(data.config.restaurantLogo) document.getElementById('restLogo').src = data.config.restaurantLogo;
                 } else {
-                    // ملء الخانات داخل لوحة التحكم تلقائياً بالبيانات المخزونة سابقاً
                     document.getElementById('setRestName').value = data.config.restaurantName || '';
-                    document.getElementById('setRestLogo').value = data.config.restaurantLogo || '';
                     document.getElementById('setWhatsApp').value = data.config.whatsapp || '';
                     document.getElementById('setInstagram').value = data.config.instagram || '';
                 }
             }
 
-            // 2. معالجة وعرض الشريط الإعلاني المتحرك (العروض)
+            // 2. عرض الشريط الإعلاني
             const offersContainer = document.getElementById('offersContainer');
             const offersWrapper = document.getElementById('offersWrapper');
             const adminOffersList = document.getElementById('admin-offers-list');
@@ -52,12 +59,10 @@ function loadAllData() {
 
             if (data.offers && Object.keys(data.offers).length > 0) {
                 if (offersWrapper) offersWrapper.style.display = 'block';
-                
-                // مضاعفة العداد لضمان استمرار دوران حركة الماركي بدون فراغات
                 const keys = Object.keys(data.offers);
                 const loopKeys = [...keys, ...keys, ...keys]; 
 
-                loopKeys.forEach((key, index) => {
+                loopKeys.forEach((key) => {
                     const offer = data.offers[key];
                     if (offersContainer) {
                         const offerDiv = document.createElement('div');
@@ -70,7 +75,6 @@ function loadAllData() {
                     }
                 });
 
-                // عرض قائمة الحذف داخل لوحة الإدارة
                 if (isAdminPage) {
                     Object.keys(data.offers).forEach(key => {
                         const offer = data.offers[key];
@@ -85,7 +89,7 @@ function loadAllData() {
                 if (offersWrapper) offersWrapper.style.display = 'none';
             }
 
-            // 3. معالجة وعرض وجبات قائمة الطعام (المنيو)
+            // 3. عرض المنيو للزبائن أو الإدارة
             const menuContainer = document.getElementById(isAdminPage ? 'admin-menu-container' : 'menu-container');
             if (menuContainer) {
                 menuContainer.innerHTML = '';
@@ -102,7 +106,6 @@ function loadAllData() {
                             ${isAdminPage ? `<button class="delete-btn" data-id="${key}">حذف هذه الوجبة</button>` : ''}
                         `;
 
-                        // للزبون: عند الضغط يفتح بوكس تحديد الموقع والطلب
                         if (!isAdminPage) {
                             card.addEventListener('click', () => openOrderModal(item));
                         }
@@ -110,7 +113,6 @@ function loadAllData() {
                         menuContainer.appendChild(card);
                     });
 
-                    // تفعيل زر الحذف في لوحة التحكم
                     if (isAdminPage) {
                         document.querySelectorAll('.delete-btn').forEach(btn => {
                             btn.addEventListener('click', (e) => {
@@ -127,47 +129,75 @@ function loadAllData() {
         });
 }
 
-// --- دوال لوحة الإدارة (إرسال وحفظ وحذف البيانات) ---
+// --- أحداث لوحة التحكم بالأزرار الجديدة ---
 if (isAdminPage) {
-    // حفظ إعدادات المطعم العامة
-    document.getElementById('saveConfigBtn').addEventListener('click', () => {
+    // حفظ إعدادات المطعم والشعار المرفوع كملف
+    document.getElementById('saveConfigBtn').addEventListener('click', async () => {
+        const btn = document.getElementById('saveConfigBtn');
+        btn.innerText = "جاري الحفظ والتحويل...";
+        
+        const logoFile = document.getElementById('setRestLogo');
+        let logoBase64 = currentConfig.restaurantLogo; // الافتراضي القديم إذا لم يغير الصورة
+        
+        if (logoFile.files.length > 0) {
+            logoBase64 = await convertFileToBase64(logoFile);
+        }
+
         const configData = {
             restaurantName: document.getElementById('setRestName').value,
-            restaurantLogo: document.getElementById('setRestLogo').value,
+            restaurantLogo: logoBase64,
             whatsapp: document.getElementById('setWhatsApp').value,
             instagram: document.getElementById('setInstagram').value
         };
-        sendToFirebase('config', configData, 'PUT');
+        
+        sendToFirebase('config', configData, 'PUT').then(() => {
+            btn.innerText = "حفظ إعدادات المطعم";
+            logoFile.value = ""; // تصفير زر الرفع
+            alert("تم حفظ البيانات والشعار بنجاح!");
+        });
     });
 
-    // إضافة إعلان/عرض جديد للشريط
-    document.getElementById('addOfferBtn').addEventListener('click', () => {
+    // إضافة عرض متحرك مع صورته من الملفات
+    document.getElementById('addOfferBtn').addEventListener('click', async () => {
         const title = document.getElementById('offerTitle').value;
-        const image = document.getElementById('offerImage').value;
+        const offerFile = document.getElementById('offerImage');
+        
         if (title) {
-            sendToFirebase('offers', { title, image }, 'POST').then(() => {
+            const btn = document.getElementById('addOfferBtn');
+            btn.innerText = "جاري المعالجة...";
+            
+            const imageBase64 = await convertFileToBase64(offerFile);
+            
+            sendToFirebase('offers', { title, image: imageBase64 }, 'POST').then(() => {
                 document.getElementById('offerTitle').value = '';
-                document.getElementById('offerImage').value = '';
+                offerFile.value = '';
+                btn.innerText = "إضافة العرض للشريط";
             });
         } else { alert('الرجاء كتابة عنوان العرض'); }
     });
 
-    // إضافة وجبة طعام جديدة
-    document.getElementById('addItemBtn').addEventListener('click', () => {
+    // إضافة وجبة جديدة مع صورتها من الاستوديو مباشرة
+    document.getElementById('addItemBtn').addEventListener('click', async () => {
         const name = document.getElementById('itemName').value;
         const price = document.getElementById('itemPrice').value;
-        const image = document.getElementById('itemImage').value;
+        const itemFile = document.getElementById('itemImage');
+        
         if (name && price) {
-            sendToFirebase('menuItems', { name, price, image }, 'POST').then(() => {
+            const btn = document.getElementById('addItemBtn');
+            btn.innerText = "جاري رفع الوجبة...";
+            
+            const imageBase64 = await convertFileToBase64(itemFile);
+            
+            sendToFirebase('menuItems', { name, price, image: imageBase64 }, 'POST').then(() => {
                 document.getElementById('itemName').value = '';
                 document.getElementById('itemPrice').value = '';
-                document.getElementById('itemImage').value = '';
+                itemFile.value = '';
+                btn.innerText = "إضافة الوجبة للمنيو";
             });
         } else { alert('الرجاء إدخال الاسم والسعر للوجبة'); }
     });
 }
 
-// دالة وسيطة للرفع للـ Firebase
 function sendToFirebase(path, bodyData, method) {
     return fetch(`${rootURL}${path}.json`, {
         method: method,
@@ -176,78 +206,52 @@ function sendToFirebase(path, bodyData, method) {
     }).then(() => loadAllData());
 }
 
-// دالة الحذف المباشر
 function deleteData(path) {
     if (confirm('هل أنت متأكد من عملية الحذف؟')) {
         fetch(`${rootURL}${path}.json`, { method: 'DELETE' }).then(() => loadAllData());
     }
 }
 
-// --- نظام نوافذ طلبات الزبائن وتوليد الرسائل المباشرة ---
+// --- نظام النوافذ المنبثقة للزبائن والتوصيل ---
 function openOrderModal(item) {
     selectedItemForOrder = item;
     document.getElementById('modalItemName').innerText = item.name;
     document.getElementById('modalItemPrice').innerText = item.price + " د.ع";
-    document.getElementById('customerLocation').value = ''; // تصفير خانة الموقع القديمة
+    document.getElementById('customerLocation').value = '';
     document.getElementById('orderModal').style.display = 'block';
 }
 
-// إغلاق النافذة المنبثقة
 if (!isAdminPage && document.querySelector('.close-modal')) {
     document.querySelector('.close-modal').addEventListener('click', () => {
         document.getElementById('orderModal').style.display = 'none';
     });
 }
 
-// معالجة ضغط زر الواتساب (توليد رسالة تلقائية بالوجبة والمكان)
 if (!isAdminPage && document.getElementById('sendWhatsAppBtn')) {
     document.getElementById('sendWhatsAppBtn').addEventListener('click', () => {
         const location = document.getElementById('customerLocation').value.trim();
-        if (!location) {
-            alert('الرجاء إدخال عنوان التوصيل أولاً لإكمال الطلب!');
-            return;
-        }
-        
-        if (!currentConfig.whatsapp) {
-            alert('عذراً، لم يقم المسؤول بإعداد رقم الواتساب بعد.');
-            return;
-        }
+        if (!location) { alert('الرجاء إدخال عنوان التوصيل أولاً!'); return; }
+        if (!currentConfig.whatsapp) { alert('لم يتم إعداد رقم الواتساب بعد.'); return; }
 
-        // صياغة الرسالة التلقائية للواتساب بشكل مرتب واحترافي جداً
-        const messageText = `مرحباً ${currentConfig.restaurantName}،\n\nأود طلب وجبة: *${selectedItemForOrder.name}*\nالسعر الحالي: *${selectedItemForOrder.price} د.ع*\n\n📍 عنوان التوصيل الخاص بي:\n${location}`;
+        const messageText = `مرحباً ${currentConfig.restaurantName}،\n\nأود طلب وجبة: *${selectedItemForOrder.name}*\nالسعر: *${selectedItemForOrder.price} د.ع*\n\n📍 عنوان التوصيل الخاص بي:\n${location}`;
         const encodedMessage = encodeURIComponent(messageText);
-        
-        // تنظيف رقم الهاتف وإزالة أي علامة زائد لتفادي مشاكل التوجيه
         let cleanNumber = currentConfig.whatsapp.replace('+', '').trim();
-        
         window.open(`https://wa.me/${cleanNumber}?text=${encodedMessage}`, '_blank');
     });
 }
 
-// معالجة ضغط زر الانستقرام (تحويل مباشر لرابط محادثة الانستقرام المفتوح)
 if (!isAdminPage && document.getElementById('sendInstagramBtn')) {
     document.getElementById('sendInstagramBtn').addEventListener('click', () => {
         const location = document.getElementById('customerLocation').value.trim();
-        if (!location) {
-            alert('الرجاء إدخال عنوان التوصيل أولاً لإعلام إدارة المطعم بمكانك عند المراسلة!');
-            return;
-        }
+        if (!location) { alert('الرجاء إدخال عنوان التوصيل أولاً!'); return; }
+        if (!currentConfig.instagram) { alert('لم يتم إضافة رابط انستقرام بعد.'); return; }
 
-        if (!currentConfig.instagram) {
-            alert('عذراً، لم يقم المسؤول بإضافة رابط الانستقرام للمطعم بعد.');
-            return;
-        }
-
-        // نسخ تفاصيل الطلب للحافظة لتسهيل لصقها من قبل الزبون في الانستقرام
         const copyText = `طلب: ${selectedItemForOrder.name} | العنوان: ${location}`;
         navigator.clipboard.writeText(copyText).then(() => {
-            alert('تم نسخ تفاصيل طلبك وعنوانك تلقائياً! يمكنك الآن لصقها مباشرة في رسائل انستقرام.');
+            alert('تم نسخ تفاصيل طلبك وعنوانك تلقائياً! يمكنك الآن لصقها في رسائل انستقرام.');
             window.open(currentConfig.instagram, '_blank');
-        }).catch(() => {
-            window.open(currentConfig.instagram, '_blank');
-        });
+        }).catch(() => { window.open(currentConfig.instagram, '_blank'); });
     });
 }
 
-// تشغيل جلب البيانات فور فتح التطبيق
 loadAllData();
