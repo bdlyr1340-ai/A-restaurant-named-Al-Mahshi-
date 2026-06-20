@@ -3,45 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منيو المطعم الاحترافي</title>
+    <title>لوحة التحكم المطورة</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-    <header class="restaurant-header">
-        <img id="restLogo" src="https://placeholder.co/100" alt="شعار المطعم" class="rest-logo">
-        <h1 id="restName">جاري التحميل...</h1>
+    <header>
+        <h1>⚙️ لوحة إدارة النظام الديناميكي</h1>
+        <a href="index.html" class="back-link">📊 استعراض المنيو الرئيسي</a>
     </header>
 
-    <div class="slider-wrapper" id="offersWrapper" style="display: none;">
-        <div class="slider-track" id="offersContainer">
-            </div>
-    </div>
-    
-    <main>
-        <div id="menu-container" class="menu-grid">
-            <p class="status-msg">جاري تحميل قائمة الطعام...</p>
-        </div>
-    </main>
+    <main class="admin-main">
+        <section class="admin-card">
+            <h2>🏠 إعدادات المطعم والتواصل</h2>
+            <input type="text" id="setRestName" placeholder="اسم المطعم">
+            <input type="text" id="setRestLogo" placeholder="رابط صورة/شعار المطعم">
+            <input type="text" id="setWhatsApp" placeholder="رابط أو رقم الواتساب (مثال: 9647700000000)">
+            <input type="text" id="setInstagram" placeholder="رابط محادثة انستقرام المباشر">
+            <button id="saveConfigBtn" class="btn-primary">حفظ إعدادات المطعم</button>
+        </section>
 
-    <div id="orderModal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal">&times;</span>
-            <h2 id="modalItemName">اسم الوجبة</h2>
-            <p class="modal-price" id="modalItemPrice">السعر</p>
+        <section class="admin-card">
+            <h2>🔥 إضافة عرض أو إعلان جديد (الشريط المتحرك)</h2>
+            <input type="text" id="offerTitle" placeholder="عنوان العرض (مثال: خصم 25% على المشاوي)">
+            <input type="text" id="offerImage" placeholder="رابط صورة العرض المستطيلة">
+            <button id="addOfferBtn" class="btn-secondary">إضافة العرض للشريط</button>
             
-            <div class="location-box">
-                <label for="customerLocation">📍 الرجاء إدخال عنوان التوصيل بالتفصيل:</label>
-                <textarea id="customerLocation" placeholder="مثال: بغداد، الكرادة، قرب ساحة التحري، عمارة رقم 5"></textarea>
-            </div>
+            <h3>العروض الحالية (اضغط للحذف):</h3>
+            <div id="admin-offers-list" class="admin-list"></div>
+        </section>
 
-            <p class="choose-method-text">اختر وسيلة التواصل لإرسال الطلب:</p>
-            <div class="order-actions">
-                <button id="sendWhatsAppBtn" class="btn-wa">🟢 طلب عبر واتساب</button>
-                <button id="sendInstagramBtn" class="btn-ig">📸 طلب عبر انستقرام</button>
-            </div>
-        </div>
-    </div>
+        <section class="admin-card">
+            <h2>🍔 إضافة وجبة جديدة للمنيو</h2>
+            <input type="text" id="itemName" placeholder="اسم الوجبة">
+            <input type="number" id="itemPrice" placeholder="السعر بالدينار العراقي">
+            <input type="text" id="itemImage" placeholder="رابط صورة الوجبة">
+            <button id="addItemBtn" class="btn-primary">إضافة الوجبة للمنيو</button>
+            
+            <h3>الوجبات الحالية في المنيو:</h3>
+            <div id="admin-menu-container" class="menu-grid"></div>
+        </section>
+    </main>
 
     <script src="app.js"></script>
 </body>
