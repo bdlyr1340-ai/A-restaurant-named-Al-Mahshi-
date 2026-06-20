@@ -1,7 +1,5 @@
-// رابط الـ Firebase الخاص بك
 const rootURL = "https://cd-store-menu-default-rtdb.firebaseio.com/";
 
-// التحقق من لوحة الإدارة وحمايتها بالباسورد
 const isAdminPage = window.location.pathname.includes('admin.html');
 if (isAdminPage) {
     let pass = prompt("أدخل كلمة مرور المسؤول للدخول للوحة التحكم:");
@@ -14,29 +12,61 @@ if (isAdminPage) {
 let currentConfig = { restaurantName: "مطعم المحشي", restaurantLogo: "", whatsapp: "", instagram: "" };
 let selectedItemForOrder = null;
 
-// دالة سحرية لتحويل ملف الصورة المرفوع من الجهاز إلى نص يعشق الفايربيز (Base64)
-function convertFileToBase64(fileInput) {
+// --- السر هنا: دالة ضغط الصور قبل رفعها للفايربيز ---
+function compressAndConvertImage(fileInput) {
     return new Promise((resolve) => {
         if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
-            resolve(""); // إذا لم يقم باختيار صورة يرجع نص فارغ
+            resolve(""); 
             return;
         }
+        
         const file = fileInput.files[0];
         const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = () => resolve("");
+        
         reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 600; // تصغير العرض لتخفيف الحجم
+                const MAX_HEIGHT = 600;
+                let width = img.width;
+                let height = img.height;
+
+                // الحفاظ على أبعاد الصورة
+                if (width > height) {
+                    if (width > MAX_WIDTH) {
+                        height *= MAX_WIDTH / width;
+                        width = MAX_WIDTH;
+                    }
+                } else {
+                    if (height > MAX_HEIGHT) {
+                        width *= MAX_HEIGHT / height;
+                        height = MAX_HEIGHT;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // تحويل الصورة لدقة 70% بحجم خفيف جداً يقبله الفايربيز
+                const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                resolve(compressedBase64);
+            }
+        };
     });
 }
 
-// --- دالة جلب البيانات وعرضها ---
 function loadAllData() {
     fetch(rootURL + '.json')
         .then(response => response.json())
         .then(data => {
             if (!data) data = {};
 
-            // 1. تطبيق الإعدادات العامة
             if (data.config) {
                 currentConfig = data.config;
                 if (!isAdminPage) {
@@ -49,7 +79,6 @@ function loadAllData() {
                 }
             }
 
-            // 2. عرض الشريط الإعلاني
             const offersContainer = document.getElementById('offersContainer');
             const offersWrapper = document.getElementById('offersWrapper');
             const adminOffersList = document.getElementById('admin-offers-list');
@@ -89,7 +118,6 @@ function loadAllData() {
                 if (offersWrapper) offersWrapper.style.display = 'none';
             }
 
-            // 3. عرض المنيو للزبائن أو الإدارة
             const menuContainer = document.getElementById(isAdminPage ? 'admin-menu-container' : 'menu-container');
             if (menuContainer) {
                 menuContainer.innerHTML = '';
@@ -129,18 +157,17 @@ function loadAllData() {
         });
 }
 
-// --- أحداث لوحة التحكم بالأزرار الجديدة ---
 if (isAdminPage) {
-    // حفظ إعدادات المطعم والشعار المرفوع كملف
+    // 1. حفظ الشعار
     document.getElementById('saveConfigBtn').addEventListener('click', async () => {
         const btn = document.getElementById('saveConfigBtn');
-        btn.innerText = "جاري الحفظ والتحويل...";
+        btn.innerText = "جاري الحفظ (لحظات)...";
         
         const logoFile = document.getElementById('setRestLogo');
-        let logoBase64 = currentConfig.restaurantLogo; // الافتراضي القديم إذا لم يغير الصورة
+        let logoBase64 = currentConfig.restaurantLogo; 
         
         if (logoFile.files.length > 0) {
-            logoBase64 = await convertFileToBase64(logoFile);
+            logoBase64 = await compressAndConvertImage(logoFile);
         }
 
         const configData = {
@@ -152,31 +179,32 @@ if (isAdminPage) {
         
         sendToFirebase('config', configData, 'PUT').then(() => {
             btn.innerText = "حفظ إعدادات المطعم";
-            logoFile.value = ""; // تصفير زر الرفع
-            alert("تم حفظ البيانات والشعار بنجاح!");
-        });
+            logoFile.value = ""; 
+            alert("✅ تم حفظ إعدادات المطعم بنجاح!");
+        }).catch(() => { alert("❌ حدث خطأ! تأكد من اتصال الإنترنت."); btn.innerText = "حفظ إعدادات المطعم"; });
     });
 
-    // إضافة عرض متحرك مع صورته من الملفات
+    // 2. إضافة عرض
     document.getElementById('addOfferBtn').addEventListener('click', async () => {
         const title = document.getElementById('offerTitle').value;
         const offerFile = document.getElementById('offerImage');
         
         if (title) {
             const btn = document.getElementById('addOfferBtn');
-            btn.innerText = "جاري المعالجة...";
+            btn.innerText = "جاري رفع العرض...";
             
-            const imageBase64 = await convertFileToBase64(offerFile);
+            const imageBase64 = await compressAndConvertImage(offerFile);
             
             sendToFirebase('offers', { title, image: imageBase64 }, 'POST').then(() => {
                 document.getElementById('offerTitle').value = '';
                 offerFile.value = '';
                 btn.innerText = "إضافة العرض للشريط";
+                alert("✅ تم رفع العرض بنجاح!");
             });
         } else { alert('الرجاء كتابة عنوان العرض'); }
     });
 
-    // إضافة وجبة جديدة مع صورتها من الاستوديو مباشرة
+    // 3. إضافة وجبة
     document.getElementById('addItemBtn').addEventListener('click', async () => {
         const name = document.getElementById('itemName').value;
         const price = document.getElementById('itemPrice').value;
@@ -186,13 +214,14 @@ if (isAdminPage) {
             const btn = document.getElementById('addItemBtn');
             btn.innerText = "جاري رفع الوجبة...";
             
-            const imageBase64 = await convertFileToBase64(itemFile);
+            const imageBase64 = await compressAndConvertImage(itemFile);
             
             sendToFirebase('menuItems', { name, price, image: imageBase64 }, 'POST').then(() => {
                 document.getElementById('itemName').value = '';
                 document.getElementById('itemPrice').value = '';
                 itemFile.value = '';
                 btn.innerText = "إضافة الوجبة للمنيو";
+                alert("✅ تم إضافة الوجبة بنجاح!");
             });
         } else { alert('الرجاء إدخال الاسم والسعر للوجبة'); }
     });
@@ -212,7 +241,7 @@ function deleteData(path) {
     }
 }
 
-// --- نظام النوافذ المنبثقة للزبائن والتوصيل ---
+// --- نظام النوافذ المنبثقة ---
 function openOrderModal(item) {
     selectedItemForOrder = item;
     document.getElementById('modalItemName').innerText = item.name;
