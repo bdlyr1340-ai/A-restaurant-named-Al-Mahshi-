@@ -3,20 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>قائمة المطعم</title>
+    <title>منيو المطعم الاحترافي</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header>
-        <h1>قائمة الطعام 🍔</h1>
+
+    <header class="restaurant-header">
+        <img id="restLogo" src="https://placeholder.co/100" alt="شعار المطعم" class="rest-logo">
+        <h1 id="restName">جاري التحميل...</h1>
     </header>
+
+    <div class="slider-wrapper" id="offersWrapper" style="display: none;">
+        <div class="slider-track" id="offersContainer">
+            </div>
+    </div>
     
     <main>
         <div id="menu-container" class="menu-grid">
-            <p>جاري تحميل القائمة...</p>
+            <p class="status-msg">جاري تحميل قائمة الطعام...</p>
         </div>
     </main>
 
-    <script type="module" src="app.js"></script>
+    <div id="orderModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2 id="modalItemName">اسم الوجبة</h2>
+            <p class="modal-price" id="modalItemPrice">السعر</p>
+            
+            <div class="location-box">
+                <label for="customerLocation">📍 الرجاء إدخال عنوان التوصيل بالتفصيل:</label>
+                <textarea id="customerLocation" placeholder="مثال: بغداد، الكرادة، قرب ساحة التحري، عمارة رقم 5"></textarea>
+            </div>
+
+            <p class="choose-method-text">اختر وسيلة التواصل لإرسال الطلب:</p>
+            <div class="order-actions">
+                <button id="sendWhatsAppBtn" class="btn-wa">🟢 طلب عبر واتساب</button>
+                <button id="sendInstagramBtn" class="btn-ig">📸 طلب عبر انستقرام</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
 </body>
 </html>
