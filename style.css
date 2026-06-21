@@ -184,13 +184,6 @@ img { max-width: 100%; display: block; }
 .brand-logo:not([src]), .brand-logo[src=""] { padding: 11px; }
 .brand-mini strong { display: block; font-size: 17px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 210px; }
 .brand-mini span { display: block; color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 240px; }
-.admin-shortcut {
-    font-weight: 900;
-    color: #7d4814;
-    padding: 10px 14px;
-    border-radius: 999px;
-    background: rgba(182,122,40,.09);
-}
 .cart-pill {
     border: 0;
     cursor: pointer;
@@ -812,7 +805,7 @@ img { max-width: 100%; display: block; }
     .hero-shell { padding: 10px 10px 0; }
     .top-nav { border-radius: 26px; align-items: stretch; flex-wrap: wrap; }
     .brand-mini { order: -1; width: 100%; }
-    .admin-shortcut, .cart-pill { flex: 1; justify-content:center; }
+    .cart-pill { flex: 1; justify-content:center; }
     .hero-card { border-radius: 30px; padding: 24px; }
     .hero-copy h1 { font-size: 42px; letter-spacing: -1px; }
     .hero-actions .btn { width: 100%; }
@@ -827,4 +820,21 @@ img { max-width: 100%; display: block; }
     .admin-food-card { grid-template-columns: 82px 1fr; }
     .admin-food-card img { width: 82px; height: 82px; }
     .qr-card img { width: 130px; height: 130px; }
+}
+
+.inline-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 14px;
+}
+.inline-actions .btn { flex: 1 1 180px; }
+.danger-zone {
+    border-color: rgba(220,38,38,.22);
+    background: linear-gradient(180deg, #fff, #fff7f7);
+}
+.danger-zone p { color: var(--muted); line-height: 1.8; margin-top: 0; }
+.danger-actions .mini-btn { padding: 10px 14px; }
+@media (max-width: 680px) {
+    .cart-pill { flex: 1; justify-content:center; }
 }
