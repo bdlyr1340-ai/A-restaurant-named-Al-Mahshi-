@@ -1,5 +1,5 @@
 const rootURL = "https://cd-store-menu-default-rtdb.firebaseio.com/";
-const ADMIN_PASSWORD = "12345";
+const FALLBACK_ADMIN_PASSWORD = "12345";
 const isAdminPage = window.location.pathname.includes("admin.html");
 
 const $ = (selector) => document.querySelector(selector);
@@ -21,22 +21,13 @@ const defaultConfig = {
     minOrder: 10000,
     prepTime: "25 - 40 دقيقة",
     themeColor: "#b67a28",
-    currency: "د.ع"
+    currency: "د.ع",
+    adminPassword: FALLBACK_ADMIN_PASSWORD
 };
 
-const defaultCategories = {
-    mahshi: { name: "محاشي", emoji: "🍲", sort: 1, builtin: true },
-    grills: { name: "مشاوي", emoji: "🔥", sort: 2, builtin: true },
-    family: { name: "وجبات عائلية", emoji: "👨‍👩‍👧", sort: 3, builtin: true },
-    sides: { name: "مقبلات", emoji: "🥗", sort: 4, builtin: true },
-    drinks: { name: "مشروبات", emoji: "🥤", sort: 5, builtin: true }
-};
+const defaultCategories = {};
 
-const demoItems = {
-    demo_dolma: { id: "demo_dolma", name: "دولمة عراقية ملكية", price: 14000, oldPrice: 16000, category: "mahshi", description: "ورق عنب، كوسة، باذنجان وبصل بحشوة رز ولحم ودبس رمان بنكهة بيتية فاخرة.", image: "", badges: { popular: true }, calories: "تقريباً 690 كالوري", prepTime: "25 دقيقة", available: true, sort: 1, demo: true },
-    demo_family: { id: "demo_family", name: "صينية المحشي العائلية", price: 38000, oldPrice: 45000, category: "family", description: "اختيار مثالي للعائلة: تشكيلة محاشي مع صوص خاص ومقبلات خفيفة.", image: "", badges: { new: true, popular: true }, calories: "تكفي 4 أشخاص", prepTime: "35 دقيقة", available: true, sort: 2, demo: true },
-    demo_kebab: { id: "demo_kebab", name: "كباب على الفحم", price: 12000, category: "grills", description: "كباب عراقي طري مشوي على الفحم مع خبز حار وطماطة مشوية.", image: "", badges: { spicy: true }, calories: "تقريباً 520 كالوري", prepTime: "18 دقيقة", available: true, sort: 3, demo: true }
-};
+const demoItems = {};
 
 const state = {
     config: { ...defaultConfig },
@@ -51,17 +42,25 @@ const state = {
     dataLoaded: false
 };
 
-function guardAdmin() {
-    if (sessionStorage.getItem("almahshi_admin_ok") === "yes") return;
+async function guardAdmin() {
+    if (sessionStorage.getItem("almahshi_admin_ok") === "yes") return true;
+    let configuredPassword = FALLBACK_ADMIN_PASSWORD;
+    try {
+        const response = await fetch(`${rootURL}config/adminPassword.json?ts=${Date.now()}`);
+        const savedPassword = await response.json();
+        if (savedPassword) configuredPassword = String(savedPassword);
+    } catch (error) {
+        console.warn("Could not load admin password, using fallback.", error);
+    }
     const pass = prompt("أدخل كلمة مرور المسؤول للدخول للوحة التحكم:");
-    if (pass !== ADMIN_PASSWORD) {
+    if (pass !== configuredPassword) {
         alert("كلمة المرور خاطئة!");
         window.location.href = "index.html";
-    } else {
-        sessionStorage.setItem("almahshi_admin_ok", "yes");
+        return false;
     }
+    sessionStorage.setItem("almahshi_admin_ok", "yes");
+    return true;
 }
-if (isAdminPage) guardAdmin();
 
 function safeText(value, fallback = "") {
     return (value === undefined || value === null || value === "") ? fallback : String(value);
@@ -113,7 +112,7 @@ async function loadAllData() {
         state.dataLoaded = true;
     } catch (error) {
         console.error(error);
-        showToast("تعذر الاتصال بقاعدة البيانات، تم عرض نسخة تجريبية مؤقتة");
+        showToast("تعذر الاتصال بقاعدة البيانات، تأكد من الإنترنت أو إعدادات Firebase");
         state.dataLoaded = false;
         state.menuItems = {};
     }
@@ -173,7 +172,7 @@ function normalizeItem(id, item) {
         name: safeText(item.name, "وجبة بدون اسم"),
         price: numberValue(item.price),
         oldPrice: numberValue(item.oldPrice),
-        category: safeText(item.category, "mahshi"),
+        category: safeText(item.category, "uncategorized"),
         description: safeText(item.description, "وجبة شهية من مطعمنا."),
         image: safeText(item.image, ""),
         badges: item.badges || {},
@@ -184,15 +183,15 @@ function normalizeItem(id, item) {
         demo: Boolean(item.demo)
     };
 }
-function getItemsArray(includeDemo = true) {
-    const raw = Object.keys(state.menuItems || {}).length ? state.menuItems : (includeDemo ? demoItems : {});
+function getItemsArray(includeDemo = false) {
+    const raw = state.menuItems || {};
     return Object.entries(raw).map(([id, item]) => normalizeItem(item.id || id, item))
         .sort((a, b) => a.sort - b.sort || a.name.localeCompare(b.name, "ar"));
 }
 function getItemById(id) {
-    return getItemsArray(true).find(item => item.id === id) || state.cart[id] || null;
+    return getItemsArray(false).find(item => item.id === id) || state.cart[id] || null;
 }
-function categoryInfo(id) { return state.categories[id] || { name: "أخرى", emoji: "🍽️" }; }
+function categoryInfo(id) { return state.categories[id] || { name: "بدون تصنيف", emoji: "🍽️" }; }
 function isOpenNow() {
     const match = safeText(state.config.workingHours).match(/(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})/);
     if (!match) return null;
@@ -249,7 +248,7 @@ function renderOffers() {
 function renderCategoryChips() {
     const container = $("#categoryChips");
     if (!container) return;
-    const items = getItemsArray(true);
+    const items = getItemsArray(false);
     const counts = items.reduce((acc, item) => { acc[item.category] = (acc[item.category] || 0) + 1; return acc; }, {});
     const allCount = items.length;
     const chips = [`<button class="category-chip ${state.activeCategory === "all" ? "active" : ""}" data-cat="all">كل القائمة (${allCount})</button>`]
@@ -258,7 +257,7 @@ function renderCategoryChips() {
 }
 function getFilteredItems() {
     const search = state.search.trim().toLowerCase();
-    return getItemsArray(true).filter(item => {
+    return getItemsArray(false).filter(item => {
         const category = categoryInfo(item.category);
         const text = `${item.name} ${item.description} ${category.name}`.toLowerCase();
         return (!search || text.includes(search)) && (state.activeCategory === "all" || item.category === state.activeCategory);
@@ -302,9 +301,17 @@ function itemCardHTML(item) {
 function renderMenuItems() {
     const container = $("#menu-container"), emptyState = $("#emptyState");
     if (!container) return;
+    const allItems = getItemsArray(false);
     const items = getFilteredItems();
     container.innerHTML = items.map(itemCardHTML).join("");
-    if (emptyState) emptyState.hidden = items.length > 0;
+    if (emptyState) {
+        emptyState.hidden = items.length > 0;
+        if (!allItems.length) {
+            emptyState.innerHTML = `<b>القائمة فارغة حالياً</b><p>الأكلات والتصنيفات تظهر هنا فقط بعد إضافتها من لوحة التحكم.</p>`;
+        } else {
+            emptyState.innerHTML = `<b>ماكو نتائج مطابقة</b><p>جرّب كلمة بحث ثانية أو اختَر تصنيف مختلف.</p>`;
+        }
+    }
     if (!items.length) container.innerHTML = "";
 }
 function addToCart(id) {
@@ -485,6 +492,8 @@ function fillConfigForm() {
         const el = document.getElementById(id);
         if (el && document.activeElement !== el) el.value = value || "";
     });
+    const passInput = document.getElementById("setAdminPassword");
+    if (passInput && document.activeElement !== passInput) passInput.value = "";
 }
 function renderAdminStats() {
     const items = getItemsArray(false);
@@ -523,27 +532,37 @@ function renderCategorySelect() {
     const select = $("#itemCategory");
     if (!select) return;
     const selected = select.value;
-    select.innerHTML = getCategoriesArray().map(cat => `<option value="${escapeHTML(cat.id)}">${escapeHTML(cat.emoji || "🍽️")} ${escapeHTML(cat.name)}</option>`).join("");
-    if (selected) select.value = selected;
+    const cats = getCategoriesArray();
+    const options = cats.length
+        ? cats.map(cat => `<option value="${escapeHTML(cat.id)}">${escapeHTML(cat.emoji || "🍽️")} ${escapeHTML(cat.name)}</option>`).join("")
+        : `<option value="uncategorized">🍽️ بدون تصنيف</option>`;
+    select.innerHTML = options;
+    if (selected && [...select.options].some(option => option.value === selected)) select.value = selected;
 }
 function renderAdminCategories() {
     const list = $("#adminCategoriesList");
     if (!list) return;
-    list.innerHTML = getCategoriesArray().map(cat => `
+    const cats = getCategoriesArray();
+    if (!cats.length) { list.innerHTML = `<div class="admin-list-item"><span>لا توجد تصنيفات ثابتة. أضف أي تصنيف تريده وسيظهر بالمنيو.</span></div>`; return; }
+    list.innerHTML = cats.map(cat => `
         <div class="admin-list-item">
-            <div><b>${escapeHTML(cat.emoji || "🍽️")} ${escapeHTML(cat.name)}</b><br><small>ترتيب: ${cat.sort || 0}${cat.builtin ? " — تصنيف افتراضي" : ""}</small></div>
-            <div class="list-actions">${state.customCategoryIds.has(cat.id) ? `<button class="mini-btn danger" data-delete-category="${escapeHTML(cat.id)}" type="button">حذف</button>` : `<span class="badge-soft">ثابت</span>`}</div>
+            <div><b>${escapeHTML(cat.emoji || "🍽️")} ${escapeHTML(cat.name)}</b><br><small>ترتيب: ${cat.sort || 0}</small></div>
+            <div class="list-actions">
+                <button class="mini-btn success" data-edit-category="${escapeHTML(cat.id)}" type="button">تعديل</button>
+                <button class="mini-btn danger" data-delete-category="${escapeHTML(cat.id)}" type="button">حذف</button>
+            </div>
         </div>`).join("");
 }
 function renderAdminOffers() {
     const list = $("#admin-offers-list");
     if (!list) return;
     const offers = Object.entries(state.offers || {}).map(([id, offer]) => ({ id, ...offer }));
-    if (!offers.length) { list.innerHTML = `<div class="admin-list-item"><span>لا توجد عروض حالياً.</span></div>`; return; }
+    if (!offers.length) { list.innerHTML = `<div class="admin-list-item"><span>لا توجد عروض حالياً. كل العروض قابلة للإضافة والتعديل والحذف.</span></div>`; return; }
     list.innerHTML = offers.map(offer => `
         <div class="admin-list-item">
             <div><b>${escapeHTML(offer.title)}</b><br><small>${escapeHTML(offer.subtitle || "بدون وصف")} — ${offer.active === false ? "متوقف" : "نشط"}</small></div>
             <div class="list-actions">
+                <button class="mini-btn success" data-edit-offer="${escapeHTML(offer.id)}" type="button">تعديل</button>
                 <button class="mini-btn" data-toggle-offer="${escapeHTML(offer.id)}" type="button">${offer.active === false ? "تفعيل" : "إيقاف"}</button>
                 <button class="mini-btn danger" data-delete-offer="${escapeHTML(offer.id)}" type="button">حذف</button>
             </div>
@@ -606,6 +625,7 @@ async function saveConfig() {
         if (btn) btn.textContent = "جاري الحفظ...";
         let logo = state.config.restaurantLogo || "";
         if (logoInput && logoInput.files.length) logo = await compressAndConvertImage(logoInput, 700, 0.82);
+        const newPassword = safeText($("#setAdminPassword")?.value).trim();
         const config = {
             restaurantName: safeText($("#setRestName")?.value, defaultConfig.restaurantName).trim(),
             restaurantLogo: logo,
@@ -620,10 +640,12 @@ async function saveConfig() {
             minOrder: numberValue($("#setMinOrder")?.value),
             prepTime: safeText($("#setPrepTime")?.value, defaultConfig.prepTime).trim(),
             themeColor: safeText($("#setThemeColor")?.value, defaultConfig.themeColor),
-            currency: "د.ع"
+            currency: "د.ع",
+            adminPassword: newPassword || state.config.adminPassword || FALLBACK_ADMIN_PASSWORD
         };
         await sendToFirebase("config", config, "PUT");
         if (logoInput) logoInput.value = "";
+        if ($("#setAdminPassword")) $("#setAdminPassword").value = "";
         showToast("تم حفظ إعدادات المطعم");
         await loadAllData();
     } catch (error) {
@@ -633,35 +655,72 @@ async function saveConfig() {
         if (btn) btn.textContent = "حفظ إعدادات المطعم";
     }
 }
-async function addCategory() {
+function resetCategoryForm() {
+    ["editingCategoryId", "categoryName", "categoryEmoji", "categorySort"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+    if ($("#addCategoryBtn")) $("#addCategoryBtn").textContent = "إضافة تصنيف";
+}
+function fillCategoryForm(id) {
+    const cat = state.categories[id];
+    if (!cat) return;
+    $("#editingCategoryId").value = id;
+    $("#categoryName").value = cat.name || "";
+    $("#categoryEmoji").value = cat.emoji || "🍽️";
+    $("#categorySort").value = cat.sort || "";
+    $("#addCategoryBtn").textContent = "تحديث التصنيف";
+    $("#categoryCard")?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+async function saveCategory() {
     const name = safeText($("#categoryName")?.value).trim();
     const emoji = safeText($("#categoryEmoji")?.value, "🍽️").trim();
     const sort = numberValue($("#categorySort")?.value) || getCategoriesArray().length + 1;
+    const editingId = safeText($("#editingCategoryId")?.value).trim();
     if (!name) { showToast("اكتب اسم التصنيف"); return; }
-    const id = `${slugify(name)}-${Date.now().toString(36)}`;
+    const id = editingId || `${slugify(name)}-${Date.now().toString(36)}`;
     try {
-        await sendToFirebase(`categories/${id}`, { name, emoji, sort }, "PUT");
-        $("#categoryName").value = ""; $("#categoryEmoji").value = ""; $("#categorySort").value = "";
-        showToast("تمت إضافة التصنيف");
+        await sendToFirebase(`categories/${id}`, { name, emoji, sort, updatedAt: new Date().toISOString() }, "PUT");
+        resetCategoryForm();
+        showToast(editingId ? "تم تحديث التصنيف" : "تمت إضافة التصنيف");
         await loadAllData();
-    } catch (error) { console.error(error); showToast("تعذر إضافة التصنيف"); }
+    } catch (error) { console.error(error); showToast("تعذر حفظ التصنيف"); }
 }
-async function addOffer() {
+function resetOfferForm() {
+    ["editingOfferId", "offerTitle", "offerSubtitle", "offerImage"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+    if ($("#offerActive")) $("#offerActive").checked = true;
+    if ($("#addOfferBtn")) $("#addOfferBtn").textContent = "إضافة العرض";
+}
+function fillOfferForm(id) {
+    const offer = state.offers[id];
+    if (!offer) return;
+    $("#editingOfferId").value = id;
+    $("#offerTitle").value = offer.title || "";
+    $("#offerSubtitle").value = offer.subtitle || "";
+    $("#offerActive").checked = offer.active !== false;
+    $("#addOfferBtn").textContent = "تحديث العرض";
+    $("#offersCard")?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+async function saveOffer() {
     const title = safeText($("#offerTitle")?.value).trim();
     const subtitle = safeText($("#offerSubtitle")?.value).trim();
     const imageInput = $("#offerImage");
     const active = $("#offerActive")?.checked !== false;
+    const editingId = safeText($("#editingOfferId")?.value).trim();
+    const existing = editingId ? (state.offers[editingId] || {}) : {};
     if (!title) { showToast("اكتب عنوان العرض"); return; }
     const btn = $("#addOfferBtn");
+    let saved = false;
     try {
-        if (btn) btn.textContent = "جاري رفع العرض...";
-        const image = await compressAndConvertImage(imageInput, 1000, 0.76);
-        await sendToFirebase("offers", { title, subtitle, image, active, createdAt: new Date().toISOString() }, "POST");
-        $("#offerTitle").value = ""; $("#offerSubtitle").value = ""; if (imageInput) imageInput.value = "";
-        showToast("تمت إضافة العرض");
+        if (btn) btn.textContent = editingId ? "جاري تحديث العرض..." : "جاري رفع العرض...";
+        let image = existing.image || "";
+        if (imageInput && imageInput.files.length) image = await compressAndConvertImage(imageInput, 1000, 0.76);
+        const offer = { title, subtitle, image, active, updatedAt: new Date().toISOString() };
+        if (editingId) await sendToFirebase(`offers/${editingId}`, offer, "PUT");
+        else await sendToFirebase("offers", { ...offer, createdAt: new Date().toISOString() }, "POST");
+        saved = true;
+        resetOfferForm();
+        showToast(editingId ? "تم تحديث العرض" : "تمت إضافة العرض");
         await loadAllData();
-    } catch (error) { console.error(error); showToast("تعذر إضافة العرض"); }
-    finally { if (btn) btn.textContent = "إضافة العرض"; }
+    } catch (error) { console.error(error); showToast("تعذر حفظ العرض"); }
+    finally { if (btn && !saved) btn.textContent = editingId ? "تحديث العرض" : "إضافة العرض"; }
 }
 function resetItemForm() {
     ["editingItemId", "itemName", "itemPrice", "itemOldPrice", "itemDescription", "itemCalories", "itemPrepTime", "itemSort", "itemImage"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
@@ -706,7 +765,7 @@ async function saveItem() {
             name,
             price,
             oldPrice: numberValue($("#itemOldPrice")?.value),
-            category: safeText($("#itemCategory")?.value, "mahshi"),
+            category: safeText($("#itemCategory")?.value, "uncategorized"),
             description: safeText($("#itemDescription")?.value).trim(),
             calories: safeText($("#itemCalories")?.value).trim(),
             prepTime: safeText($("#itemPrepTime")?.value).trim(),
@@ -752,10 +811,23 @@ async function updateOrderStatus(id, status) {
     showToast("تم تحديث حالة الطلب");
     await loadAllData();
 }
+async function clearPath(path, label) {
+    if (!confirm(`تأكيد نهائي: هل تريد حذف ${label}؟`)) return;
+    try {
+        await fetch(`${rootURL}${path}.json`, { method: "DELETE" });
+        showToast(`تم حذف ${label}`);
+        await loadAllData();
+    } catch (error) {
+        console.error(error);
+        showToast("تعذر تنفيذ الحذف");
+    }
+}
 function bindAdminEvents() {
     $("#saveConfigBtn")?.addEventListener("click", saveConfig);
-    $("#addCategoryBtn")?.addEventListener("click", addCategory);
-    $("#addOfferBtn")?.addEventListener("click", addOffer);
+    $("#addCategoryBtn")?.addEventListener("click", saveCategory);
+    $("#resetCategoryBtn")?.addEventListener("click", resetCategoryForm);
+    $("#addOfferBtn")?.addEventListener("click", saveOffer);
+    $("#resetOfferBtn")?.addEventListener("click", resetOfferForm);
     $("#saveItemBtn")?.addEventListener("click", saveItem);
     $("#resetItemBtn")?.addEventListener("click", resetItemForm);
     $("#copyMenuUrlBtn")?.addEventListener("click", async () => {
@@ -765,12 +837,16 @@ function bindAdminEvents() {
     });
     $("#setThemeColor")?.addEventListener("input", event => document.documentElement.style.setProperty("--accent", event.target.value));
     $("#adminCategoriesList")?.addEventListener("click", event => {
+        const edit = event.target.closest("[data-edit-category]")?.dataset.editCategory;
         const id = event.target.closest("[data-delete-category]")?.dataset.deleteCategory;
+        if (edit) fillCategoryForm(edit);
         if (id) deleteData(`categories/${id}`);
     });
     $("#admin-offers-list")?.addEventListener("click", event => {
+        const edit = event.target.closest("[data-edit-offer]")?.dataset.editOffer;
         const del = event.target.closest("[data-delete-offer]")?.dataset.deleteOffer;
         const toggle = event.target.closest("[data-toggle-offer]")?.dataset.toggleOffer;
+        if (edit) fillOfferForm(edit);
         if (del) deleteData(`offers/${del}`);
         if (toggle) toggleOffer(toggle).catch(() => showToast("تعذر تحديث العرض"));
     });
@@ -788,10 +864,19 @@ function bindAdminEvents() {
         if (statusBtn) updateOrderStatus(statusBtn.dataset.order, statusBtn.dataset.status).catch(() => showToast("تعذر تحديث الطلب"));
         if (del) deleteData(`orders/${del}`);
     });
+    $("#clearItemsBtn")?.addEventListener("click", () => clearPath("menuItems", "كل الوجبات"));
+    $("#clearCategoriesBtn")?.addEventListener("click", () => clearPath("categories", "كل التصنيفات"));
+    $("#clearOffersBtn")?.addEventListener("click", () => clearPath("offers", "كل العروض"));
+    $("#clearOrdersBtn")?.addEventListener("click", () => clearPath("orders", "سجل الطلبات"));
 }
-function init() {
-    if (isAdminPage) bindAdminEvents();
-    else bindPublicEvents();
+async function init() {
+    if (isAdminPage) {
+        const ok = await guardAdmin();
+        if (!ok) return;
+        bindAdminEvents();
+    } else {
+        bindPublicEvents();
+    }
     loadAllData();
 }
 document.addEventListener("DOMContentLoaded", init);
