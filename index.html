@@ -3,45 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منيو المطعم الاحترافي</title>
+    <meta name="theme-color" content="#b67a28">
+    <title>منيو المحشي | تجربة طلب احترافية</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="public-page">
+    <div class="page-glow page-glow-1"></div>
+    <div class="page-glow page-glow-2"></div>
 
-    <header class="restaurant-header">
-        <img id="restLogo" src="https://placeholder.co/100" alt="شعار المطعم" class="rest-logo">
-        <h1 id="restName">جاري التحميل...</h1>
+    <header class="hero-shell">
+        <nav class="top-nav glass-panel">
+            <a href="admin.html" class="admin-shortcut" aria-label="لوحة التحكم">لوحة التحكم</a>
+            <div class="brand-mini">
+                <img id="restLogo" src="" alt="شعار المطعم" class="brand-logo">
+                <div>
+                    <strong id="restName">مطعم المحشي</strong>
+                    <span id="restSlogan">أطيب محاشي بطابع عراقي</span>
+                </div>
+            </div>
+            <button id="cartToggle" class="cart-pill" type="button">
+                <span>🧾 السلة</span>
+                <b id="cartCount">0</b>
+            </button>
+        </nav>
+
+        <section class="hero-card glass-panel">
+            <div class="hero-copy">
+                <span class="eyebrow">منيو رقمي ديناميكي</span>
+                <h1 id="heroTitle">طعم المحشي العراقي… بصورة أفخم</h1>
+                <p id="heroSubtitle">اختَر وجباتك، اجمعها بالسلة، وأرسل الطلب مباشرة للواتساب أو الانستقرام مع عنوانك.</p>
+                <div class="hero-actions">
+                    <a href="#menuSection" class="btn btn-primary">ابدأ الطلب الآن</a>
+                    <button class="btn btn-ghost" id="shareMenuBtn" type="button">نسخ رابط المنيو</button>
+                </div>
+            </div>
+            <div class="hero-plate" aria-hidden="true">
+                <span class="steam steam-1"></span>
+                <span class="steam steam-2"></span>
+                <span class="steam steam-3"></span>
+                <div class="plate-core">
+                    <span>🍲</span>
+                </div>
+            </div>
+        </section>
+
+        <section id="quickInfo" class="quick-info"></section>
     </header>
 
-    <div class="slider-wrapper" id="offersWrapper" style="display: none;">
-        <div class="slider-track" id="offersContainer">
+    <section class="slider-wrapper" id="offersWrapper" style="display:none;">
+        <div class="section-heading inline-heading">
+            <span>🔥 عروض اليوم</span>
+        </div>
+        <div class="slider-mask">
+            <div class="slider-track" id="offersContainer"></div>
+        </div>
+    </section>
+
+    <main id="menuSection" class="menu-shell">
+        <div class="menu-toolbar glass-panel">
+            <div class="search-box">
+                <span>🔎</span>
+                <input id="searchInput" type="search" placeholder="ابحث عن محشي، كباب، مشروبات…">
             </div>
-    </div>
-    
-    <main>
+            <div id="categoryChips" class="category-chips"></div>
+        </div>
+
+        <div class="section-heading">
+            <div>
+                <span>القائمة</span>
+                <p>تصفح حسب التصنيف أو ابحث بسرعة، وكل وجبة تضيفها تدخل بسلة طلب واحدة.</p>
+            </div>
+        </div>
+
         <div id="menu-container" class="menu-grid">
             <p class="status-msg">جاري تحميل قائمة الطعام...</p>
         </div>
+        <div id="emptyState" class="empty-state" hidden>
+            <b>ماكو نتائج مطابقة</b>
+            <p>جرّب كلمة بحث ثانية أو اختَر تصنيف مختلف.</p>
+        </div>
     </main>
 
-    <div id="orderModal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal">&times;</span>
-            <h2 id="modalItemName">اسم الوجبة</h2>
-            <p class="modal-price" id="modalItemPrice">السعر</p>
-            
-            <div class="location-box">
-                <label for="customerLocation">📍 الرجاء إدخال عنوان التوصيل بالتفصيل:</label>
-                <textarea id="customerLocation" placeholder="مثال: بغداد، الكرادة، قرب ساحة التحري، عمارة رقم 5"></textarea>
+    <aside id="cartDrawer" class="cart-drawer" aria-label="سلة الطلبات">
+        <div class="cart-head">
+            <div>
+                <span class="eyebrow">طلبك الحالي</span>
+                <h2>سلة الطلب</h2>
             </div>
+            <button id="closeCart" class="icon-btn" type="button">×</button>
+        </div>
+        <div id="cartItems" class="cart-items"></div>
+        <div class="cart-summary">
+            <div><span>المجموع</span><b id="subtotalAmount">0 د.ع</b></div>
+            <div><span>التوصيل</span><b id="deliveryAmount">0 د.ع</b></div>
+            <div class="total-row"><span>الإجمالي</span><b id="totalAmount">0 د.ع</b></div>
+        </div>
+        <div class="checkout-form">
+            <input id="customerName" type="text" placeholder="اسمك الكريم (اختياري)">
+            <input id="customerPhone" type="tel" placeholder="رقم الهاتف (اختياري)">
+            <textarea id="customerLocation" placeholder="📍 عنوان التوصيل بالتفصيل"></textarea>
+            <textarea id="orderNotes" placeholder="ملاحظات للطلب: بدون حار، زيادة صوص…"></textarea>
+        </div>
+        <div class="order-actions">
+            <button id="sendWhatsAppBtn" class="btn btn-wa" type="button">إرسال الطلب واتساب</button>
+            <button id="sendInstagramBtn" class="btn btn-ig" type="button">نسخ الطلب وفتح انستقرام</button>
+            <button id="clearCartBtn" class="btn btn-soft" type="button">تفريغ السلة</button>
+        </div>
+    </aside>
+    <div id="cartBackdrop" class="drawer-backdrop"></div>
 
-            <p class="choose-method-text">اختر وسيلة التواصل لإرسال الطلب:</p>
-            <div class="order-actions">
-                <button id="sendWhatsAppBtn" class="btn-wa">🟢 طلب عبر واتساب</button>
-                <button id="sendInstagramBtn" class="btn-ig">📸 طلب عبر انستقرام</button>
-            </div>
+    <div id="foodModal" class="modal" aria-hidden="true">
+        <div class="modal-content food-modal-card">
+            <button class="close-modal icon-btn" id="closeFoodModal" type="button">×</button>
+            <div id="modalFoodContent"></div>
         </div>
     </div>
+
+    <div id="toast" class="toast" role="status"></div>
 
     <script src="app.js"></script>
 </body>
