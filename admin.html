@@ -3,79 +3,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم المطورة</title>
+    <meta name="theme-color" content="#17110b">
+    <title>لوحة تحكم المحشي الاحترافية</title>
     <link rel="stylesheet" href="style.css">
-    <style>
-        /* تحسين مظهر أزرار رفع الملفات لتناسب الموبايل */
-        label {
-            display: block;
-            text-align: right;
-            font-weight: bold;
-            margin-top: 10px;
-            font-size: 10.5pt;
-            color: #555;
-        }
-        input[type="file"] {
-            background: #f8f9fa;
-            border: 1px dashed #ff4757;
-            padding: 10px;
-            cursor: pointer;
-        }
-    </style>
 </head>
-<body>
-    <header>
-        <h1>⚙️ لوحة إدارة النظام الديناميكي</h1>
-        <a href="index.html" class="back-link">📊 استعراض المنيو الرئيسي</a>
-    </header>
+<body class="admin-page">
+    <div class="admin-layout">
+        <aside class="admin-sidebar">
+            <div class="sidebar-brand">
+                <span class="brand-mark">م</span>
+                <div>
+                    <strong>المحشي Pro</strong>
+                    <small>لوحة إدارة ديناميكية</small>
+                </div>
+            </div>
+            <a href="index.html" class="side-link">👁️ عرض المنيو</a>
+            <a href="#settingsCard" class="side-link">🏪 معلومات المطعم</a>
+            <a href="#categoryCard" class="side-link">🧭 التصنيفات</a>
+            <a href="#offersCard" class="side-link">🔥 العروض</a>
+            <a href="#itemsCard" class="side-link">🍽️ الوجبات</a>
+            <a href="#ordersCard" class="side-link">📦 الطلبات</a>
+        </aside>
 
-    <main class="admin-main">
-        <section class="admin-card">
-            <h2>🏠 إعدادات المطعم والتواصل</h2>
-            <label>اسم المطعم:</label>
-            <input type="text" id="setRestName" placeholder="اكتب اسم المطعم">
-            
-            <label>اختر صورة/شعار المطعم من جهازك:</label>
-            <input type="file" id="setRestLogo" accept="image/*">
-            
-            <label>رقم الواتساب للتوصيل (مثال: 9647700000000):</label>
-            <input type="text" id="setWhatsApp" placeholder="رقم الواتساب بدون علامة +">
-            
-            <label>رابط انستقرام المباشر:</label>
-            <input type="text" id="setInstagram" placeholder="رابط المحادثة">
-            <button id="saveConfigBtn" class="btn-primary">حفظ إعدادات المطعم</button>
-        </section>
+        <main class="admin-main">
+            <header class="admin-hero glass-panel">
+                <div>
+                    <span class="eyebrow">Dashboard</span>
+                    <h1>لوحة تحكم احترافية للمنيو</h1>
+                    <p>تحكم بالهوية، التصنيفات، الوجبات، العروض، الطلبات، وحتى مؤشرات تساعدك تعرف شنو ناقص بالمنيو.</p>
+                </div>
+                <div class="admin-actions-top">
+                    <button id="copyMenuUrlBtn" class="btn btn-ghost" type="button">نسخ رابط المنيو</button>
+                    <a href="index.html" class="btn btn-primary">معاينة مباشرة</a>
+                </div>
+            </header>
 
-        <section class="admin-card">
-            <h2>🔥 إضافة عرض أو إعلان جديد (الشريط المتحرك)</h2>
-            <label>عنوان العرض (مثال: خصم 25%):</label>
-            <input type="text" id="offerTitle" placeholder="اكتب تفاصيل العرض">
-            
-            <label>اختر صورة العرض المستطيلة من جهازك:</label>
-            <input type="file" id="offerImage" accept="image/*">
-            <button id="addOfferBtn" class="btn-secondary">إضافة العرض للشريط</button>
-            
-            <h3>العروض الحالية (اضغط للحذف):</h3>
-            <div id="admin-offers-list" class="admin-list"></div>
-        </section>
+            <section class="stat-grid">
+                <div class="stat-card"><span>الوجبات</span><b id="statMeals">0</b></div>
+                <div class="stat-card"><span>التصنيفات</span><b id="statCategories">0</b></div>
+                <div class="stat-card"><span>العروض النشطة</span><b id="statOffers">0</b></div>
+                <div class="stat-card"><span>طلبات مسجلة</span><b id="statOrders">0</b></div>
+            </section>
 
-        <section class="admin-card">
-            <h2>🍔 إضافة وجبة جديدة للمنيو</h2>
-            <label>اسم الوجبة:</label>
-            <input type="text" id="itemName" placeholder="مثال: برجر لحم دبل">
-            
-            <label>السعر بالدينار العراقي:</label>
-            <input type="number" id="itemPrice" placeholder="السعر">
-            
-            <label>اختر صورة الوجبة من جهازك:</label>
-            <input type="file" id="itemImage" accept="image/*">
-            <button id="addItemBtn" class="btn-primary">إضافة الوجبة للمنيو</button>
-            
-            <h3>الوجبات الحالية في المنيو:</h3>
-            <div id="admin-menu-container" class="menu-grid"></div>
-        </section>
-    </main>
+            <section id="insightsPanel" class="insights-panel"></section>
 
+            <section id="settingsCard" class="admin-card">
+                <div class="card-title-row">
+                    <div>
+                        <span class="eyebrow">هوية المطعم</span>
+                        <h2>إعدادات المطعم والتوصيل</h2>
+                    </div>
+                    <span class="badge-soft">تظهر بالمنيو مباشرة</span>
+                </div>
+                <div class="form-grid two-cols">
+                    <label>اسم المطعم<input type="text" id="setRestName" placeholder="مطعم المحشي"></label>
+                    <label>الشعار / الصورة<input type="file" id="setRestLogo" accept="image/*"></label>
+                    <label>الشعار النصي القصير<input type="text" id="setSlogan" placeholder="أطيب محاشي بطابع عراقي"></label>
+                    <label>لون الهوية<input type="color" id="setThemeColor" value="#b67a28"></label>
+                    <label>عنوان الهيرو الرئيسي<input type="text" id="setHeroTitle" placeholder="طعم المحشي العراقي… بصورة أفخم"></label>
+                    <label>وصف الهيرو<input type="text" id="setHeroSubtitle" placeholder="وصف قصير يظهر أعلى المنيو"></label>
+                    <label>رقم واتساب الطلبات<input type="text" id="setWhatsApp" placeholder="9647700000000"></label>
+                    <label>رابط انستقرام<input type="text" id="setInstagram" placeholder="https://instagram.com/..."></label>
+                    <label>العنوان<input type="text" id="setAddress" placeholder="بغداد - الكرادة"></label>
+                    <label>ساعات العمل<input type="text" id="setWorkingHours" placeholder="12:00 - 01:00"></label>
+                    <label>أجرة التوصيل<input type="number" id="setDeliveryFee" placeholder="2000"></label>
+                    <label>الحد الأدنى للطلب<input type="number" id="setMinOrder" placeholder="10000"></label>
+                    <label>وقت التحضير<input type="text" id="setPrepTime" placeholder="25 - 40 دقيقة"></label>
+                </div>
+                <button id="saveConfigBtn" class="btn btn-primary full-btn" type="button">حفظ إعدادات المطعم</button>
+            </section>
+
+            <section class="admin-card qr-card">
+                <div>
+                    <span class="eyebrow">تسويق سريع</span>
+                    <h2>QR جاهز للمنيو</h2>
+                    <p>اطبع هذا الكود على الكيس، الطاولة، الستكر، أو كرت المطعم حتى الزبون يفتح المنيو مباشرة.</p>
+                </div>
+                <img id="qrCodeImg" alt="QR Code للمنيو">
+            </section>
+
+            <section id="categoryCard" class="admin-card">
+                <div class="card-title-row">
+                    <div>
+                        <span class="eyebrow">تنظيم القائمة</span>
+                        <h2>إدارة التصنيفات</h2>
+                    </div>
+                </div>
+                <div class="form-grid three-cols">
+                    <label>اسم التصنيف<input type="text" id="categoryName" placeholder="محاشي"></label>
+                    <label>أيقونة<input type="text" id="categoryEmoji" placeholder="🍲" maxlength="4"></label>
+                    <label>ترتيب الظهور<input type="number" id="categorySort" placeholder="1"></label>
+                </div>
+                <button id="addCategoryBtn" class="btn btn-secondary full-btn" type="button">إضافة تصنيف</button>
+                <div id="adminCategoriesList" class="admin-list cards-list"></div>
+            </section>
+
+            <section id="offersCard" class="admin-card">
+                <div class="card-title-row">
+                    <div>
+                        <span class="eyebrow">Marketing</span>
+                        <h2>العروض والإعلانات المتحركة</h2>
+                    </div>
+                </div>
+                <div class="form-grid two-cols">
+                    <label>عنوان العرض<input type="text" id="offerTitle" placeholder="خصم 20% على العائلة"></label>
+                    <label>وصف قصير<input type="text" id="offerSubtitle" placeholder="لفترة محدودة"></label>
+                    <label>صورة العرض<input type="file" id="offerImage" accept="image/*"></label>
+                    <label class="check-label"><input type="checkbox" id="offerActive" checked> العرض نشط</label>
+                </div>
+                <button id="addOfferBtn" class="btn btn-secondary full-btn" type="button">إضافة العرض</button>
+                <div id="admin-offers-list" class="admin-list cards-list"></div>
+            </section>
+
+            <section id="itemsCard" class="admin-card">
+                <div class="card-title-row">
+                    <div>
+                        <span class="eyebrow">Menu Builder</span>
+                        <h2 id="itemFormTitle">إضافة وجبة جديدة</h2>
+                    </div>
+                    <button id="resetItemBtn" class="btn btn-soft small-btn" type="button">تفريغ النموذج</button>
+                </div>
+                <input type="hidden" id="editingItemId">
+                <div class="form-grid two-cols">
+                    <label>اسم الوجبة<input type="text" id="itemName" placeholder="دولمة عراقية"></label>
+                    <label>التصنيف<select id="itemCategory"></select></label>
+                    <label>السعر<input type="number" id="itemPrice" placeholder="12000"></label>
+                    <label>السعر القديم / قبل الخصم<input type="number" id="itemOldPrice" placeholder="15000"></label>
+                    <label class="wide-label">وصف الوجبة<textarea id="itemDescription" placeholder="ورق عنب، بصل، كوسة، نكهة دبس الرمان…"></textarea></label>
+                    <label>السعرات / معلومة<input type="text" id="itemCalories" placeholder="تقريباً 620 كالوري"></label>
+                    <label>وقت التحضير<input type="text" id="itemPrepTime" placeholder="20 دقيقة"></label>
+                    <label>ترتيب الظهور<input type="number" id="itemSort" placeholder="1"></label>
+                    <label>صورة الوجبة<input type="file" id="itemImage" accept="image/*"></label>
+                    <label class="check-label"><input type="checkbox" id="itemAvailable" checked> متوفر حالياً</label>
+                </div>
+                <div class="checks-row">
+                    <label><input type="checkbox" id="badgePopular"> الأكثر طلباً</label>
+                    <label><input type="checkbox" id="badgeNew"> جديد</label>
+                    <label><input type="checkbox" id="badgeSpicy"> حار</label>
+                    <label><input type="checkbox" id="badgeVegetarian"> نباتي</label>
+                </div>
+                <button id="saveItemBtn" class="btn btn-primary full-btn" type="button">حفظ الوجبة</button>
+                <div id="admin-menu-container" class="admin-menu-list"></div>
+            </section>
+
+            <section id="ordersCard" class="admin-card">
+                <div class="card-title-row">
+                    <div>
+                        <span class="eyebrow">Orders</span>
+                        <h2>آخر الطلبات المسجلة</h2>
+                    </div>
+                    <span class="badge-soft">تتسجل عند إرسال الطلب</span>
+                </div>
+                <div id="adminOrdersList" class="orders-list"></div>
+            </section>
+        </main>
+    </div>
+
+    <div id="toast" class="toast" role="status"></div>
     <script src="app.js"></script>
 </body>
 </html>
