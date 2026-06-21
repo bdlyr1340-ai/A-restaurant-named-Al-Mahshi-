@@ -23,6 +23,7 @@
             <a href="#offersCard" class="side-link">🔥 العروض</a>
             <a href="#itemsCard" class="side-link">🍽️ الوجبات</a>
             <a href="#ordersCard" class="side-link">📦 الطلبات</a>
+            <a href="#controlCard" class="side-link">🧹 تنظيف البيانات</a>
         </aside>
 
         <main class="admin-main">
@@ -63,6 +64,7 @@
                     <label>عنوان الهيرو الرئيسي<input type="text" id="setHeroTitle" placeholder="طعم المحشي العراقي… بصورة أفخم"></label>
                     <label>وصف الهيرو<input type="text" id="setHeroSubtitle" placeholder="وصف قصير يظهر أعلى المنيو"></label>
                     <label>رقم واتساب الطلبات<input type="text" id="setWhatsApp" placeholder="9647700000000"></label>
+                    <label>كلمة مرور لوحة التحكم<input type="password" id="setAdminPassword" placeholder="اتركها فارغة إذا لا تريد تغييرها"></label>
                     <label>رابط انستقرام<input type="text" id="setInstagram" placeholder="https://instagram.com/..."></label>
                     <label>العنوان<input type="text" id="setAddress" placeholder="بغداد - الكرادة"></label>
                     <label>ساعات العمل<input type="text" id="setWorkingHours" placeholder="12:00 - 01:00"></label>
@@ -89,12 +91,16 @@
                         <h2>إدارة التصنيفات</h2>
                     </div>
                 </div>
+                <input type="hidden" id="editingCategoryId">
                 <div class="form-grid three-cols">
                     <label>اسم التصنيف<input type="text" id="categoryName" placeholder="محاشي"></label>
                     <label>أيقونة<input type="text" id="categoryEmoji" placeholder="🍲" maxlength="4"></label>
                     <label>ترتيب الظهور<input type="number" id="categorySort" placeholder="1"></label>
                 </div>
-                <button id="addCategoryBtn" class="btn btn-secondary full-btn" type="button">إضافة تصنيف</button>
+                <div class="inline-actions">
+                    <button id="addCategoryBtn" class="btn btn-secondary" type="button">إضافة تصنيف</button>
+                    <button id="resetCategoryBtn" class="btn btn-soft" type="button">إلغاء التعديل</button>
+                </div>
                 <div id="adminCategoriesList" class="admin-list cards-list"></div>
             </section>
 
@@ -105,13 +111,17 @@
                         <h2>العروض والإعلانات المتحركة</h2>
                     </div>
                 </div>
+                <input type="hidden" id="editingOfferId">
                 <div class="form-grid two-cols">
                     <label>عنوان العرض<input type="text" id="offerTitle" placeholder="خصم 20% على العائلة"></label>
                     <label>وصف قصير<input type="text" id="offerSubtitle" placeholder="لفترة محدودة"></label>
                     <label>صورة العرض<input type="file" id="offerImage" accept="image/*"></label>
                     <label class="check-label"><input type="checkbox" id="offerActive" checked> العرض نشط</label>
                 </div>
-                <button id="addOfferBtn" class="btn btn-secondary full-btn" type="button">إضافة العرض</button>
+                <div class="inline-actions">
+                    <button id="addOfferBtn" class="btn btn-secondary" type="button">إضافة العرض</button>
+                    <button id="resetOfferBtn" class="btn btn-soft" type="button">إلغاء التعديل</button>
+                </div>
                 <div id="admin-offers-list" class="admin-list cards-list"></div>
             </section>
 
@@ -144,6 +154,23 @@
                 </div>
                 <button id="saveItemBtn" class="btn btn-primary full-btn" type="button">حفظ الوجبة</button>
                 <div id="admin-menu-container" class="admin-menu-list"></div>
+            </section>
+
+            <section id="controlCard" class="admin-card danger-zone">
+                <div class="card-title-row">
+                    <div>
+                        <span class="eyebrow">تحكم كامل</span>
+                        <h2>تنظيف وحذف البيانات</h2>
+                    </div>
+                    <span class="badge-soft">استخدمها بحذر</span>
+                </div>
+                <p>هذه الأزرار تخليك تنظّف المنيو بالكامل إذا تريد تبدي من الصفر. كل عملية تسألك تأكيد قبل التنفيذ.</p>
+                <div class="inline-actions danger-actions">
+                    <button id="clearItemsBtn" class="mini-btn danger" type="button">حذف كل الوجبات</button>
+                    <button id="clearCategoriesBtn" class="mini-btn danger" type="button">حذف كل التصنيفات</button>
+                    <button id="clearOffersBtn" class="mini-btn danger" type="button">حذف كل العروض</button>
+                    <button id="clearOrdersBtn" class="mini-btn danger" type="button">حذف سجل الطلبات</button>
+                </div>
             </section>
 
             <section id="ordersCard" class="admin-card">
